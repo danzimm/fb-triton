@@ -916,6 +916,8 @@ struct BufferLoadToLocalOpConversion
 
     RankedTensorType ptrType =
         cast<RankedTensorType>(getPointerTypeWithShape(ptr, offset));
+    bool padMaskedLoad = op.getMask() && op.getOther() &&
+                         !isZeroFillConst(op.getOther());
 
     // We can load N elements at a time if:
     //  1. Every group of N source pointers are contiguous.  For example, if
@@ -1037,6 +1039,8 @@ struct BufferLoadToLocalOpConversion
         if (targetInfo.requiresAliasInfoForAsyncOps())
           AMD::addAsyncCopyAliasScope(bufferLoadToLds);
 
+        if (padMaskedLoad && targetInfo.useAsyncMarks())
+          ROCDL::PadCounterOp::create(rewriter, loc, 0u, 1u);
         rewriter.setInsertionPointToStart(afterLoadBlock);
 
         // The `other` values are written for masked-out lanes, so this store
@@ -1213,6 +1217,8 @@ struct AsyncCopyGlobalToLocalOpConversion
         emitAsyncLoad(rewriter, loc, targetInfo, vecBits, srcElem, shmemAddr,
                       *cacheModifier, evict, multicastMask);
 
+        if (hasMask && targetInfo.useAsyncMarks())
+          ROCDL::PadCounterOp::create(rewriter, loc, 0u, 1u);
         rewriter.setInsertionPointToStart(afterLoadBlock);
       }
 
