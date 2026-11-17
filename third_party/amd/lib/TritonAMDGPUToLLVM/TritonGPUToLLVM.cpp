@@ -360,11 +360,13 @@ struct ConvertTritonAMDGPUToLLVM
   }
 
   ConvertTritonAMDGPUToLLVM(StringRef gfxArch, bool ftz,
-                            bool enableTreeReduction, bool cuMode) {
+                            bool enableTreeReduction, bool cuMode,
+                            bool counterPadding) {
     this->gfxArch = gfxArch.str();
     this->ftz = ftz;
     this->enableTreeReduction = enableTreeReduction;
     this->cuMode = cuMode;
+    this->counterPadding = counterPadding;
   }
 
   void getDependentDialects(DialectRegistry &registry) const override {
@@ -382,7 +384,8 @@ struct ConvertTritonAMDGPUToLLVM
       return signalPassFailure();
 
     AMD::TargetInfo targetInfo(this->gfxArch.getValue(),
-                               this->cuMode.getValue());
+                               this->cuMode.getValue(),
+                               this->counterPadding.getValue());
     if (targetInfo.getISAFamily() == triton::amdgpu::ISAFamily::Unknown) {
       mod.emitError("unsupported target: '") << this->gfxArch.getValue() << "'";
       return signalPassFailure();
@@ -639,9 +642,10 @@ createConvertTritonAMDGPUToLLVMPass(StringRef gfxArch, bool ftz,
 
 std::unique_ptr<OperationPass<ModuleOp>>
 createConvertTritonAMDGPUToLLVMPass(StringRef gfxArch, bool ftz,
-                                    bool enableTreeReduction, bool cuMode) {
+                                    bool enableTreeReduction, bool cuMode,
+                                    bool counterPadding) {
   return std::make_unique<ConvertTritonAMDGPUToLLVM>(
-      gfxArch, ftz, enableTreeReduction, cuMode);
+      gfxArch, ftz, enableTreeReduction, cuMode, counterPadding);
 }
 
 std::unique_ptr<OperationPass<ModuleOp>>

@@ -38,6 +38,10 @@ std::unique_ptr<OperationPass<ModuleOp>>
 createConvertTritonAMDGPUToLLVMPass(StringRef gfxArch, bool ftz, bool cuMode);
 std::unique_ptr<OperationPass<ModuleOp>>
 createConvertTritonAMDGPUToLLVMPass(StringRef gfxArch, bool ftz,
+                                    bool enableTreeReduction, bool cuMode,
+                                    bool counterPadding);
+std::unique_ptr<OperationPass<ModuleOp>>
+createConvertTritonAMDGPUToLLVMPass(StringRef gfxArch, bool ftz,
                                     bool enableTreeReduction);
 std::unique_ptr<OperationPass<ModuleOp>>
 createFinalizeScheduledMfmaOperandsPass();

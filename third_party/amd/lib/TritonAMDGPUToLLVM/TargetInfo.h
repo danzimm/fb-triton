@@ -13,8 +13,9 @@ void registerTargetInfo();
 
 class TargetInfo : public mlir::triton::TargetInfoBase {
 public:
-  explicit TargetInfo(std::optional<StringRef> arch, bool cuMode = false)
-      : targetFeatures(arch), cuMode(cuMode) {}
+  explicit TargetInfo(std::optional<StringRef> arch, bool cuMode = false,
+                      bool counterPadding = false)
+      : targetFeatures(arch), cuMode(cuMode), counterPadding(counterPadding) {}
 
   StringRef getArch() const { return targetFeatures.getArch(); }
   StringRef getBaseArch() const { return targetFeatures.getBaseArch(); }
@@ -166,6 +167,9 @@ public:
   // Whether this target uses asyncmark/wait_asyncmark intrinsics for
   // async memory ops synchronization instead of waitcnt-based intrinsics waits.
   bool useAsyncMarks() const { return targetFeatures.useAsyncMarks(); }
+  // Whether to emit rocdl.pad.waitcnt hints in branched masked-load arms so
+  // the backend pads the opposite arm to a matching LOAD counter count.
+  bool emitCounterPadding() const { return counterPadding && useAsyncMarks(); }
 
   bool supportsMultiCTALaunch() const {
     return targetFeatures.supportsMultiCTALaunch();
@@ -253,6 +257,7 @@ private:
 
   amdgpu::TargetFeatures targetFeatures;
   bool cuMode;
+  bool counterPadding;
 };
 } // namespace mlir::triton::AMD
 

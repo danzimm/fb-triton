@@ -59,7 +59,8 @@ namespace mlir {
 namespace triton {
 std::unique_ptr<OperationPass<ModuleOp>>
 createConvertTritonAMDGPUToLLVMPass(::llvm::StringRef gfxArch, bool ftz,
-                                    bool enableTreeReduction, bool cuMode);
+                                    bool enableTreeReduction, bool cuMode,
+                                    bool counterPadding);
 } // namespace triton
 } // namespace mlir
 
@@ -77,9 +78,10 @@ llvm::Triple getAMDTargetTriple(const std::string &arch) {
 void init_triton_amd_passes_ttgpuir(py::module_ &m) {
   using namespace mlir::triton;
   m.def("add_to_llvmir", [](mlir::PassManager &pm, const std::string &arch,
-                            bool ftz, bool enableTreeReduction, bool cuMode) {
+                            bool ftz, bool enableTreeReduction, bool cuMode,
+                            bool counterPadding) {
     pm.addPass(createConvertTritonAMDGPUToLLVMPass(
-        arch, ftz, enableTreeReduction, cuMode));
+        arch, ftz, enableTreeReduction, cuMode, counterPadding));
   });
   ADD_PASS_OPTION_WRAPPER_1("add_membar", createTritonAMDGPUMembar,
                             const std::string &);

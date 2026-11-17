@@ -1,5 +1,8 @@
-// RUN: triton-opt %s -split-input-file --allocate-shared-memory --convert-triton-amdgpu-to-llvm=gfx-arch=gfx950 | FileCheck %s --check-prefixes=COMMON,GFX950
-// RUN: triton-opt %s -split-input-file --allocate-shared-memory --convert-triton-amdgpu-to-llvm=gfx-arch=gfx942 --verify-diagnostics | FileCheck %s --check-prefixes=COMMON
+// RUN: triton-opt %s -split-input-file --allocate-shared-memory --convert-triton-amdgpu-to-llvm="gfx-arch=gfx950 counter-padding=true" | FileCheck %s --check-prefixes=COMMON,GFX950
+// RUN: triton-opt %s -split-input-file --allocate-shared-memory --convert-triton-amdgpu-to-llvm="gfx-arch=gfx942 counter-padding=true" --verify-diagnostics | FileCheck %s --check-prefixes=COMMON
+// RUN: triton-opt %s -split-input-file --allocate-shared-memory --convert-triton-amdgpu-to-llvm=gfx-arch=gfx950 | FileCheck %s --check-prefix=NOPAD
+// Counter padding hints are opt-in.
+// NOPAD-NOT: rocdl.pad.waitcnt
 
 #blocked = #ttg.blocked<{sizePerThread = [1, 1], threadsPerWarp = [1, 64], warpsPerCTA = [4, 1], order = [1, 0]}>
 #shared = #ttg.swizzled_shared<{vec = 1, perPhase = 1, maxPhase = 1, order = [1, 0]}>
@@ -472,7 +475,8 @@ module attributes {"ttg.num-ctas" = 1 : i32, "ttg.num-warps" = 4 : i32, "ttg.thr
     // COMMON: llvm.cond_br %{{.*}}, ^[[LOAD_BB:bb[0-9]+]], ^[[AFTER_BB:bb[0-9]+]]
     // COMMON-NEXT: ^[[LOAD_BB]]:
     // COMMON: rocdl.raw.ptr.buffer.load.async.lds
-    // COMMON-NOT: rocdl.pad.waitcnt
+    // A nonzero `other` keeps the branch, so the load arm carries a padding hint.
+    // COMMON-NEXT: rocdl.pad.waitcnt load, 1
     // COMMON-NEXT: llvm.br ^[[AFTER_BB]]
     // The `other` store must appear in the after-load block so it is reached
     // regardless of whether the load branch was taken (i.e., for masked-out lanes).

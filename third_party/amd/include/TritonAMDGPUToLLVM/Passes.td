@@ -56,6 +56,9 @@ def ConvertTritonAMDGPUToLLVM
        Option<"cuMode", "cu-mode",
               "bool", /*default*/ "false",
               "the kernel runs in CU rather than WGP execution mode">,
+       Option<"counterPadding", "counter-padding",
+              "bool", /*default*/ "false",
+              "emit rocdl.pad.waitcnt hints in masked load arms (CDNA3/CDNA4)">,
   ];
 }
 

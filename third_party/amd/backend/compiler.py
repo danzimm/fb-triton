@@ -464,6 +464,13 @@ class HIPOptions:
     disable_vector_combine: bool = False
     disable_packed_fp32_ops: bool = False
 
+    # Experimental: emit llvm.amdgcn.pad.waitcnt hints in branched masked-load arms on gfx942/gfx950
+    # so the backend pads the opposite arm with matching LOAD counter events, keeping later partial
+    # waits exact on both paths. Requires an LLVM toolchain that provides the intrinsic. Off by
+    # default; enable per kernel with `kernel[grid](..., counter_padding=True)` or process-wide with
+    # TRITON_HIP_COUNTER_PADDING=1.
+    counter_padding: bool = False
+
     # Experimental hint for how the AMD backend schedules a kernel's instructions. The only
     # recognized value is "mfma-schedule" (gfx942 and gfx950): run the MFMA scheduler on the optimized
     # LLVM IR. It interleaves the MFMAs of each hot loop with the memory operations that are
@@ -626,6 +633,8 @@ class HIPBackend(BaseBackend):
             # explicit per-config value takes precedence so autotuning can
             # select the scheduler independently for each kernel variant.
             args["enable_sched_group_barrier_scheduler"] = knobs.amd.enable_ttgir_schedule
+        if knobs.amd.counter_padding is not None:
+            args["counter_padding"] = knobs.amd.counter_padding
         args.update({k: opts[k] for k in HIPOptions.__dataclass_fields__.keys() if k in opts and opts[k] is not None})
         args["enable_fp_fusion"] = knobs.language.fp_fusion_enabled(args.get("enable_fp_fusion"))
         return HIPOptions(**args)
@@ -1006,6 +1015,7 @@ class HIPBackend(BaseBackend):
             __HIP_FTZ,
             options.enable_tree_reduction,
             options.wgp_cu_mode == "cu",
+            options.counter_padding,
         )
         # Lower Proton segment values before warp specialization captures partition operands.
         instrument(pm, point="llvmir-to-llvm", context=mod.context)

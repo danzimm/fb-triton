@@ -1039,7 +1039,7 @@ struct BufferLoadToLocalOpConversion
         if (targetInfo.requiresAliasInfoForAsyncOps())
           AMD::addAsyncCopyAliasScope(bufferLoadToLds);
 
-        if (padMaskedLoad && targetInfo.useAsyncMarks())
+        if (padMaskedLoad && targetInfo.emitCounterPadding())
           ROCDL::PadWaitcntOp::create(rewriter, loc,
                                       ROCDL::WaitcntCounter::load, 1u);
         rewriter.setInsertionPointToStart(afterLoadBlock);
@@ -1218,7 +1218,7 @@ struct AsyncCopyGlobalToLocalOpConversion
         emitAsyncLoad(rewriter, loc, targetInfo, vecBits, srcElem, shmemAddr,
                       *cacheModifier, evict, multicastMask);
 
-        if (hasMask && targetInfo.useAsyncMarks())
+        if (hasMask && targetInfo.emitCounterPadding())
           ROCDL::PadWaitcntOp::create(rewriter, loc,
                                       ROCDL::WaitcntCounter::load, 1u);
         rewriter.setInsertionPointToStart(afterLoadBlock);
