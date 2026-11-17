@@ -1040,7 +1040,8 @@ struct BufferLoadToLocalOpConversion
           AMD::addAsyncCopyAliasScope(bufferLoadToLds);
 
         if (padMaskedLoad && targetInfo.useAsyncMarks())
-          ROCDL::PadCounterOp::create(rewriter, loc, 0u, 1u);
+          ROCDL::PadWaitcntOp::create(rewriter, loc,
+                                      ROCDL::WaitcntCounter::load, 1u);
         rewriter.setInsertionPointToStart(afterLoadBlock);
 
         // The `other` values are written for masked-out lanes, so this store
@@ -1218,7 +1219,8 @@ struct AsyncCopyGlobalToLocalOpConversion
                       *cacheModifier, evict, multicastMask);
 
         if (hasMask && targetInfo.useAsyncMarks())
-          ROCDL::PadCounterOp::create(rewriter, loc, 0u, 1u);
+          ROCDL::PadWaitcntOp::create(rewriter, loc,
+                                      ROCDL::WaitcntCounter::load, 1u);
         rewriter.setInsertionPointToStart(afterLoadBlock);
       }
 
