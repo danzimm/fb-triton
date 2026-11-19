@@ -761,7 +761,8 @@ void TritonIntegerRangeAnalysis::visitRegionSuccessors(
                 llvm::map_to_vector(nonSuccessorInputs, valueToLattices);
         visitNonControlFlowArguments(branch, parentSuccessor,
                                      nonSuccessorInputs,
-                                     nonSuccessorInputLattices);
+                                     nonSuccessorInputLattices,
+                                     [&](Value value) { return getLatticeElementFor(point, value); });
       } else {
         if (!inputs.empty())
           firstIndex = cast<BlockArgument>(inputs.front()).getArgNumber();
@@ -773,7 +774,8 @@ void TritonIntegerRangeAnalysis::visitRegionSuccessors(
                 llvm::map_to_vector(nonSuccessorInputs, valueToLattices);
         visitNonControlFlowArguments(branch, RegionSuccessor(region),
                                      nonSuccessorInputs,
-                                     nonSuccessorInputLattices);
+                                     nonSuccessorInputLattices,
+                                     [&](Value value) { return getLatticeElementFor(point, value); });
       }
     }
 
